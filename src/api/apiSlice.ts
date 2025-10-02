@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-export const baseUrl = "http://localhost:3008";
-// export const baseUrl = "https://";
+// export const baseUrl = "http://localhost:3008";
+export const baseUrl = "https://admin.orangerex.shop";
 
 // Define base API configuration
 export const apiSlice = createApi({
