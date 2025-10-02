@@ -7,29 +7,84 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { useAddPaymentMutation, useAddSalesMutation } from "@/api/apiSlice";
+
+export interface Sales {
+  productId: string;
+  name: string;
+  email?: string;
+  phone: string;
+  qty: number;
+  address: string;
+}
+
+export interface Payment {
+  salesId: string;
+  status?: string;
+  amount: number;
+}
 
 const Checkout = () => {
   const { cart, getCartTotal, clearCart } = useCart();
+  const [loading, isLoading] = useState(false);
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const [addSales] = useAddSalesMutation();
+  const [addPayment] = useAddPaymentMutation();
+  const [formData, setFormData] = useState<Sales>({
     name: "",
     email: "",
     address: "",
-    city: "",
-    zipCode: "",
-    cardNumber: "",
+    phone: "",
+    productId: "",
+    qty: 0,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    toast({
-      title: "Order placed successfully!",
-      description: "Thank you for your purchase. You will receive a confirmation email shortly.",
+    isLoading(true);
+    const sales: Sales[] = [];
+    cart.map((item: any) => {
+      sales.push({ ...formData, productId: item.id, qty: item.quantity });
     });
-    
-    clearCart();
-    navigate("/");
+
+    const res = await addSales(sales);
+    if (res.error) {
+      isLoading(false);
+      toast({
+        title: "Error!",
+        description: "Sorry, failed to place Order.",
+        variant: "destructive",
+      });
+    } else {
+      //Make payment
+      const payRes = await addPayment({
+        salesId: res.data.salesId,
+        amount: getCartTotal(),
+      });
+
+      isLoading(false);
+
+      toast({
+        title: "Order placed successfully!",
+        description:
+          "Thank you for your purchase. You will receive a payment request shortly.",
+      });
+
+      if (payRes.error) {
+        toast({
+          title: "Error!",
+          description: "Sorry, failed to create payment.",
+          variant: "destructive",
+        });
+      } else {
+        console.log(payRes.data);
+        const url: string = payRes.data.paymentInfo.redirect_url;
+        window.location.replace(url);
+      }
+
+      // clearCart();
+      // navigate("/");
+    }
   };
 
   if (cart.length === 0) {
@@ -40,7 +95,7 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-gradient-subtle">
       <Navbar />
-      
+
       <main className="container mx-auto px-4 py-8">
         <h1 className="mb-8 text-3xl font-bold">Checkout</h1>
 
@@ -58,10 +113,12 @@ const Checkout = () => {
                       id="name"
                       required
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -69,54 +126,48 @@ const Checkout = () => {
                       type="email"
                       required
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="address">Address</Label>
                     <Input
                       id="address"
                       required
                       value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <Label htmlFor="city">City</Label>
-                      <Input
-                        id="city"
-                        required
-                        value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="zipCode">ZIP Code</Label>
-                      <Input
-                        id="zipCode"
-                        required
-                        value={formData.zipCode}
-                        onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      required
-                      value={formData.cardNumber}
-                      onChange={(e) => setFormData({ ...formData, cardNumber: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, address: e.target.value })
+                      }
                     />
                   </div>
 
-                  <Button type="submit" size="lg" className="w-full">
-                    Complete Order - ${getCartTotal().toFixed(2)}
+                  <div>
+                    <Label htmlFor="cardNumber">Contact</Label>
+                    <Input
+                      id="cardNumber"
+                      placeholder="078XXXXXXX"
+                      required
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <Button
+                    disabled={loading}
+                    type="submit"
+                    size="lg"
+                    className="w-full"
+                  >
+                    Complete Order -{" "}
+                    {Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "UGX",
+                    }).format(getCartTotal())}
                   </Button>
                 </form>
               </CardContent>
@@ -136,14 +187,22 @@ const Checkout = () => {
                         {item.name} x {item.quantity}
                       </span>
                       <span className="font-medium">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        {Intl.NumberFormat("en-US", {
+                          style: "currency",
+                          currency: "UGX",
+                        }).format(item.price * item.quantity)}
                       </span>
                     </div>
                   ))}
                   <div className="border-t pt-4">
                     <div className="flex justify-between font-bold">
                       <span>Total</span>
-                      <span className="text-primary">${getCartTotal().toFixed(2)}</span>
+                      <span className="text-primary">
+                        {Intl.NumberFormat("en-US", {
+                          style: "currency",
+                          currency: "UGX",
+                        }).format(getCartTotal())}
+                      </span>
                     </div>
                   </div>
                 </div>

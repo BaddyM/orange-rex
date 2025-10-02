@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Minus, Plus, Trash2, ArrowLeft } from "lucide-react";
+import { baseUrl } from "@/api/apiSlice";
 
 const Cart = () => {
   const { cart, updateQuantity, removeFromCart, getCartTotal } = useCart();
@@ -45,7 +46,7 @@ const Cart = () => {
                   <CardContent className="p-4">
                     <div className="flex gap-4">
                       <img
-                        src={item.image}
+                        src={`${baseUrl}/${item.image}`}
                         alt={item.name}
                         className="h-24 w-24 rounded-lg object-cover"
                       />
@@ -74,7 +75,7 @@ const Cart = () => {
                           </div>
                           <div className="flex items-center gap-4">
                             <span className="text-lg font-bold text-primary">
-                              ${(item.price * item.quantity).toFixed(2)}
+                              {Intl.NumberFormat("en-US",{style:"currency",currency:"UGX"}).format(item.price * item.quantity)}
                             </span>
                             <Button
                               size="icon"
@@ -100,7 +101,7 @@ const Cart = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-medium">${getCartTotal().toFixed(2)}</span>
+                    <span className="font-medium">{Intl.NumberFormat("en-US",{style:"currency",currency:"UGX"}).format(getCartTotal())}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Shipping</span>
@@ -110,7 +111,7 @@ const Cart = () => {
                     <div className="flex justify-between">
                       <span className="text-lg font-bold">Total</span>
                       <span className="text-2xl font-bold text-primary">
-                        ${getCartTotal().toFixed(2)}
+                        {Intl.NumberFormat("en-US",{style:"currency",currency:"UGX"}).format(getCartTotal())}
                       </span>
                     </div>
                   </div>

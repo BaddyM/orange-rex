@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useCart } from "@/contexts/CartContext";
 import { ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
+import { baseUrl } from "@/api/apiSlice";
 
 interface ProductCardProps {
   product: Product;
@@ -17,7 +18,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
       <Link to={`/product/${product.id}`}>
         <div className="aspect-square overflow-hidden">
           <img
-            src={product.image}
+            src={`${baseUrl}/${product.image}`}
             alt={product.name}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
@@ -30,7 +31,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </h3>
         </Link>
         <p className="mb-2 line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
-        <p className="text-2xl font-bold text-primary">${product.price.toFixed(2)}</p>
+        <p className="text-2xl font-bold text-primary">{Intl.NumberFormat("en-US",{
+            style:"currency",
+            currency:"UGX",
+        }).format(product.price)}</p>
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <Button

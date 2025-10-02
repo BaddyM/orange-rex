@@ -16,7 +16,7 @@ const Navbar = () => {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-primary">
               <Store className="h-6 w-6 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold text-foreground">OrangeStore</span>
+            <span className="text-xl font-bold text-foreground">RStore</span>
           </Link>
 
           <div className="flex items-center gap-4">

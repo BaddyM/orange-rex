@@ -7,18 +7,26 @@ import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
 import { toast } from "@/hooks/use-toast";
 import ProductManagement from "@/components/ProductManagement";
+import { useLoginMutation } from "@/api/apiSlice";
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [login] = useLoginMutation();
 
   const ADMIN_PASSWORD = "admin123";
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
+    setLoading(true);
+    const res = await login({email,password});
+    setLoading(false);
+    if (!res.error) {
       setIsAuthenticated(true);
+      localStorage.setItem("user",JSON.stringify(res.data.data));
       toast({
         title: "Login successful",
         description: "Welcome to the admin dashboard",
@@ -50,20 +58,28 @@ const Admin = () => {
             <CardContent>
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter admin email"
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
                   <Label htmlFor="password">Password</Label>
                   <Input
                     id="password"
                     type="password"
                     placeholder="Enter admin password"
-                    value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Demo password: admin123
-                  </p>
                 </div>
-                <Button type="submit" className="w-full">
+                <Button 
+                disabled={loading}
+                type="submit" className="w-full">
                   Login
                 </Button>
               </form>
