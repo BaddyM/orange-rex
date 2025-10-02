@@ -1,11 +1,12 @@
 import { useGetProductsQuery } from "@/api/apiSlice";
+import ErrorComponent from "@/components/Error";
+import Loading from "@/components/Loading";
 import Navbar from "@/components/Navbar";
 import ProductCard from "@/components/ProductCard";
 import { useProducts } from "@/contexts/ProductContext";
 import { useState } from "react";
 
 const Index = () => {
-  const { products } = useProducts();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const { data, isSuccess, isError, isLoading } = useGetProductsQuery({
@@ -15,21 +16,20 @@ const Index = () => {
 
   if (isError) {
     return (
-      <div>
-        <p className="mb-0">Error...</p>
-      </div>
+      <ErrorComponent/>
     );
   }
 
   if (isLoading) {
     return (
-      <div>
-        <p className="mb-0">Loading...</p>
-      </div>
+      <Loading/>
     );
   }
 
   if (isSuccess) {
+    const filteredProducts: any[] = data.filter(
+      (item) => item.isDeleted == false
+    );
     return (
       <div className="min-h-screen bg-gradient-subtle">
         <Navbar />
@@ -44,13 +44,29 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {data.map((product) => {
-              product.isDeleted == false && (
-                <ProductCard key={product.id} product={product} />
-              );
-            })}
-          </div>
+          {/* {filteredProducts.length} */}
+          {filteredProducts.length > 0 ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredProducts.map(
+                (product) =>
+                  product.isDeleted == false && (
+                    <ProductCard key={product.id} product={product} />
+                  )
+              )}
+            </div>
+          ) : (
+            <div
+              className="flex justify-center items-center w-full"
+              style={{ height: "50vh" }}
+            >
+              <div>
+                <img
+                  src="/no-data.jpg"
+                  style={{ width: "200px", height: "200px" }}
+                />
+              </div>
+            </div>
+          )}
         </main>
       </div>
     );

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
 import { baseUrl, useGetProductsQuery } from "@/api/apiSlice";
 import { useState } from "react";
+import ErrorComponent from "@/components/Error";
+import Loading from "@/components/Loading";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -20,19 +22,11 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
 
   if (isError) {
-    return (
-      <div>
-        <p className="mb-0">Error...</p>
-      </div>
-    );
+    return <ErrorComponent />;
   }
 
   if (isLoading) {
-    return (
-      <div>
-        <p className="mb-0">Loading...</p>
-      </div>
-    );
+    return <Loading />;
   }
 
   if (isSuccess) {
@@ -88,7 +82,10 @@ const ProductDetail = () => {
 
               <div className="mb-8">
                 <span className="text-4xl font-bold text-primary">
-                  {Intl.NumberFormat("en-US",{style:"currency",currency:"UGX"}).format(product.price)}
+                  {Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "UGX",
+                  }).format(product.price)}
                 </span>
               </div>
 
